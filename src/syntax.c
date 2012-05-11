@@ -10,6 +10,19 @@
 #define SYNTAX_STRING 4
 
 
+typedef struct {
+	int type;
+	char *word;
+	int close_to_char;
+	void *extra_fields;
+} Element;
+
+typedef struct {
+	void* prev;
+	void* next;
+	Element* data;
+} SyntaxList;
+
 int is_digit(char ch){
 	return ch >= 0x30 && ch <= 0x39;
 }
@@ -22,7 +35,11 @@ int is_letter(char ch){
  * Parse content of file into syntax tree containing 
  * basic syntax elements (Text, Number, Hexnumber and String)
  */
-int* parse(char* filename){
+SyntaxList* parse(char* filename){
+	SyntaxList *first = NULL;
+	SyntaxList *last = NULL;
+	SyntaxList *new_one;
+	Element *element;
 	int  ch_counter = 0;
 	FILE *fp;
 	char ch;
@@ -102,7 +119,19 @@ int* parse(char* filename){
 		if (0) {
 			save_word:
 				word[wp] = 0;
-				/* TODO: save word to tree */
+				element = malloc(sizeof(Element));
+				element->type = type;
+				element->word = word;
+				element->close_to_char = ch_counter;
+				if (last == NULL){
+					last = first = malloc(sizeof(SyntaxList));
+				} else {
+					new_one = malloc(sizeof(SyntaxList));
+					last->next = new_one;
+					new_one->prev = last;
+					last = new_one;
+				}
+				last->data = element;
 			new_word_reset:
 				wp = 0;
 				word = malloc(sizeof(char)*MAXIMUM_WORD_SIZE);
@@ -113,4 +142,5 @@ int* parse(char* filename){
 		
 	}
 	
+	return first;	
 }
